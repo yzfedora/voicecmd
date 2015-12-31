@@ -1,0 +1,33 @@
+
+/****************** following is the json formatted speech recognition result  *************/
+{"result":[]}
+{"result":[{"alternative":[{"transcript":"hello how are you","confidence":0.93000209},{"transcript":"how are you"},{"transcript":"Hi how are you"},{"transcript":"how how are you"},{"transcript":"hey how are you"}],"final":true}],"result_index":0}
+
+/****************** form ****************/
+{
+    "result":[
+        {
+            "alternative":[
+                {
+                    "transcript":"how are you doing gym",
+                    "confidence":0.89506119
+                },
+                {
+                    "transcript":"how are you doing Jim"
+                },
+                {
+                    "transcript":"how are you doing to him"
+                },
+                {
+                    "transcript":"how are you doing meme"
+                },
+                {
+                    "transcript":"how are you doing dream"
+                }
+            ],
+            "final":true
+        }
+    ],
+    "result_index":0
+}
+

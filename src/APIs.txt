@@ -1,0 +1,131 @@
+/******************************************************************************
+ * #include "google_sprec.h       Google Speech API                           *
+ ******************************************************************************/
+
+/*
+ * create a google_sprec structure pointer. return this pointer on success.
+ * or NULL on error.
+ */
+struct google_sprec *google_sprec_new(void);
+
+/*
+ * initial the google_sprec structure. return 0 on success, or -1 on error.
+ * and google_sprec_strerror() will return a string which described the error.
+ */
+int google_sprec_init(struct google_sprec *gs);
+
+/*
+ * by passing a sndcap structure as the second argument. it will send the audio
+ * data which in the member 'sc_buf_ptr' to Google Speech Server, and the result
+ * will be stored as json in 'sr_data_ptr'. and finally, will be parsed by
+ * libjansson. the recognition result will be stored in a liked-list, which is
+ * a google_sprec_res structure.
+ * return 0 on success, or -1 on error. call google_sprec_strerror() get detail.
+ */
+int google_sprec_lookup(struct google_sprec *gs, struct sndcap *snd);
+
+/*
+ * Display the recognition result to stdout.
+ */
+void google_sprec_res_display(struct google_sprec *gs);
+
+/*
+ * calling the voice_command_searching() to search the command whether
+ * registered or not before.
+ * 
+ * Notes:
+ *     if the matched a command, and it already registered before. it will to
+ * call the action function automatically. following is the type:
+ *
+ *     void (*action)(void *);
+ */
+void google_sprec_searching(struct google_sprec *gs);
+
+/*
+ * free all of the memory resource, clean up libcURL, etc.
+ */
+void google_sprec_delete(struct google_sprec *gs);
+
+
+
+/******************************************************************************
+ * #include "sndcap.h"            ALSA Sound Capture API                      *
+ ******************************************************************************/
+
+/*
+ * create a sndcap structure by according the arguments.
+ * - device_name    normally, it is string "default", or "plughw:x,y", or
+ *                  "hw:x,y". when program error occured. and error message is
+ *                  "Invalid Arguments". you should change the device_name to
+ *                  appropriate, and suit for you system. more details please
+ *                  go to website: "alsa-project.org".
+ *
+ * - format         current support SI_FORMAT_S16_LE only.
+ * 
+ * - channels       only support mono.
+ * 
+ * - sample_rate    Google Speech API accept 8Hkz ~ 44kHz, but using 16kHz
+ *                  is sufficient.
+ *
+ *			
+ */
+struct sndcap *sndcap_new(char *device_name,
+                          snd_pcm_format_t format,
+                          uint32_t channels,
+                          uint32_t sample_rate);
+
+/*
+ * initial the sound card for audio capture or playback the beep when listening.
+ * return 0 on success. or -1 on error. sndcap_error() will give you details.
+ */
+int sndcap_init(struct sndcap *snd);
+
+/*
+ * by calling this function to capture the voice from device.
+ * - snd         sndcap structure pointer, we created before.
+ * - silent_time waiting a number of silent time and go to exit.
+ * - timedout    maximum time to capture.
+ *
+ * Note: silent_time and timedout both are in seconds.
+ */
+int sndcap_listen(struct sndcap *snd, uint32_t silent_time, uint32_t timedout);
+
+/*
+ * free all kind of resource.
+ */
+void sndcap_delete(struct sndcap *snd);
+
+
+
+
+/******************************************************************************
+ * #include "voice_command.h"     Voice Command Register And Searching        *
+ ******************************************************************************/
+
+/*
+ * to register a command, when the searching function matched it. it will
+ * call the action function(specified by second argument, a function
+ * pointer). 
+ *
+ * Note: this function should be called in file voice_action.c, called by
+ * voice_action_register_all(). return 0 on success, or -1 on error.
+ */
+int voice_command_register(char *command, void (*action)(void *arg));
+
+/*
+ * to searching the string whether is the command we registered before or not.
+ * if matched a command, it will call the action function automatically.
+ */
+int voice_command_searching(char *string);
+
+
+
+/******************************************************************************
+ * #include "voice_action.h"      User Customized Command Action API          *
+ ******************************************************************************/
+
+/*
+ * all kind of commands will be registered in this function. you can implemented
+ * the action function in it also.
+ */
+void voice_action_register_all(void);
