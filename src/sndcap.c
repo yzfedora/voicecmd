@@ -30,7 +30,7 @@ static int sndcap_beep_preload(struct sndcap *snd)
 	int fd = -1;
 	ssize_t nread, offset = 0, total;
 
-	if ((fd = open("beep.raw", O_RDONLY)) == -1)
+	if ((fd = open("../conf/beep.raw", O_RDONLY)) == -1)
 		sndcap_syserr_goto(snd, errno, "open");
 
 	/* get the file size, and allocate a chunk of memory to store it. */

@@ -6,12 +6,8 @@
 #include "sndinfo.h"
 #include "sndcap.h"
 
-/* every Google developer ID 50 quotas per day. */
-#define GOOGLE_ID	"393800177811-sdljb3k5bb0j3sa1fnjaqsi8ocvt5kkb"\
-			".apps.googleusercontent.com"
-#define GOOGLE_CRT	"LMgPx9mWxt0YI8LqzNM_ax1A"
-#define GOOGLE_KEY	"AIzaSyBlBhYTM8TO7oRFvls3CdXerIhMTGMNiEw"
 
+#define KEY_FILE	"../conf/key.conf"
 #define GOOGLE_URL	"https://www.google.com/speech-api/v2/recognize?"\
 			"output=json&lang=en-us&key=%s"
 

@@ -6,6 +6,7 @@
 #include <jansson.h>
 #include "google_sprec.h"
 #include "voice_command.h"
+#include "google_key.h"
 
 /* 
  * Note: following macros is used to reduce the error handle process.
@@ -327,6 +328,10 @@ int google_sprec_init(struct google_sprec *gs)
 	if (!(gs->sr_curl_handle = curl_easy_init()))
 		google_sprec_curl_err_goto(gs, 0, "curl_easy_init");
 
+	if (google_key_init(KEY_FILE) == -1)
+		google_sprec_err_goto(gs, errno, "google_key_init");
+
+	snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, google_key_next());
 	return 0;
 out:
 	return -1;
@@ -349,7 +354,6 @@ struct google_sprec *google_sprec_new(void)
 		goto out;
 
 	gs->sr_data_size = GS_DATA_SZ;
-	snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, GOOGLE_KEY);
 
 	return gs;
 out:
