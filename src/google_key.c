@@ -88,6 +88,9 @@ char *google_key_next(void)
 	if (!key_curr)
 		key_curr = key_head;
 
+	if (!key_curr)
+		return NULL;
+
 	key = key_curr->gk_key;
 	key_curr = key_curr->gk_next;
 	return key;

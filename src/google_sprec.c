@@ -262,6 +262,8 @@ int google_sprec_lookup(struct google_sprec *gs, struct sndcap *snd)
 	gs->sr_snd_ptr = snd->sc_buf_ptr;
 	gs->sr_snd_len = snd->sc_buf_len;
 	memcpy(&gs->sr_capinfo, &snd->sc_capinfo, sizeof(gs->sr_capinfo));
+
+try_again:
 	google_sprec_curl_setopt(gs, &headers);
 
 	
@@ -272,8 +274,22 @@ int google_sprec_lookup(struct google_sprec *gs, struct sndcap *snd)
         curl_easy_getinfo(gs->sr_curl_handle, CURLINFO_RESPONSE_CODE,
 			  &http_code);
         if (http_code != 200) {
-		google_sprec_curl_err_goto(gs, 0, "curl_easy_getinfo, return code %d", http_code);
-                goto out;
+		char *key;
+		
+		if (http_code != 403)
+			google_sprec_curl_err_goto(gs, 0, "curl_easy_getinfo");
+
+
+		/* 
+		 * quota limits reached out. try next key in the configure file.
+		 * if no more available key to use. return a -1 and a error
+		 * description.
+		 */
+		if (!(key = google_key_next()))
+			google_sprec_err_goto(gs, 0, "no available key to use");
+		
+		snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, key);
+		goto try_again;
         }
 
 
@@ -324,12 +340,17 @@ void google_sprec_res_display(struct google_sprec *gs)
  */
 int google_sprec_init(struct google_sprec *gs)
 {
+	char *key;
+
 	curl_global_init(CURL_GLOBAL_ALL);
 	if (!(gs->sr_curl_handle = curl_easy_init()))
 		google_sprec_curl_err_goto(gs, 0, "curl_easy_init");
 
 	if (google_key_init(KEY_FILE) == -1)
 		google_sprec_err_goto(gs, errno, "google_key_init");
+
+	if (!(key = google_key_next()))
+		google_sprec_err_goto(gs, 0, "no available key to use");
 
 	snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, google_key_next());
 	return 0;

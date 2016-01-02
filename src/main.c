@@ -59,9 +59,8 @@ int main(int argc, char *argv[])
 		/* implemented to call the function voice_command_searching().*/
 		DEBUG("try to seaching voice command...\n");
 		if (google_sprec_searching(gs) == -1) {
-			fprintf(stderr, "\e31mcommand not found...\e0m\n");
+			fprintf(stderr, "\e[31mcommand not found...\e[0m\n");
 		}
-		break;
 	}
 
 	google_sprec_delete(gs);
