@@ -72,5 +72,5 @@ void google_sprec_delete(struct google_sprec *gs);
 void google_sprec_res_display(struct google_sprec *gs);
 int google_sprec_init(struct google_sprec *gs);
 struct google_sprec *google_sprec_new(void);
-#define google_sprec_strerror(gs) ((gs)->sr_err_ptr)
+char *google_sprec_strerror(struct google_sprec *gs);
 #endif

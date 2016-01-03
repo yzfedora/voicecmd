@@ -232,8 +232,14 @@ static void google_sprec_curl_setopt(struct google_sprec *gs,
  */
 int google_sprec_searching(struct google_sprec *gs)
 {
-	struct google_sprec_res *res = gs->sr_res;
-	
+	struct google_sprec_res *res;
+
+	if (!gs) {
+		errno = -EINVAL;
+		return -1;
+	}
+
+	res = gs->sr_res;
 	while (res) {
 		if (voice_command_searching(res->rs_string) == 0)
 			return 0;
@@ -256,6 +262,11 @@ int google_sprec_lookup(struct google_sprec *gs, struct sndcap *snd)
 	int err;
 	int http_code;
 	struct curl_slist *headers = NULL;	/* DON'T forget */
+
+	if (!gs || !snd) {
+		errno = -EINVAL;
+		return -1;
+	}
 
 	google_sprec_res_free(gs);	/* free result of the last time */
 
@@ -326,12 +337,23 @@ void google_sprec_delete(struct google_sprec *gs)
  */
 void google_sprec_res_display(struct google_sprec *gs)
 {
-	struct google_sprec_res *next = gs->sr_res;
+	struct google_sprec_res *next;
+	
+	if (!gs)
+		return;
 
+	next = gs->sr_res;
 	while (next) {
 		printf("recogniton result from google: %s\n", next->rs_string);
 		next = next->rs_next;
 	}
+}
+
+char *google_sprec_strerror(struct google_sprec *gs)
+{
+	if (!gs)
+		return "Invalid argument";
+	return gs->sr_err_ptr;
 }
 
 /*
@@ -341,6 +363,11 @@ void google_sprec_res_display(struct google_sprec *gs)
 int google_sprec_init(struct google_sprec *gs)
 {
 	char *key;
+
+	if (!gs) {
+		errno = -EINVAL;
+		return -1;
+	}
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	if (!(gs->sr_curl_handle = curl_easy_init()))
@@ -352,7 +379,7 @@ int google_sprec_init(struct google_sprec *gs)
 	if (!(key = google_key_next()))
 		google_sprec_err_goto(gs, 0, "no available key to use");
 
-	snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, google_key_next());
+	snprintf(gs->sr_url, GS_URL_SZ, GOOGLE_URL, key);
 	return 0;
 out:
 	return -1;

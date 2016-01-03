@@ -66,5 +66,5 @@ struct sndcap *sndcap_new(char *device_name,
 			  snd_pcm_format_t format,
 			  uint32_t channels,
 			  uint32_t sample_rate);
-#define sndcap_strerror(snd) ((snd)->sc_err_ptr)
+char *sndcap_strerror(struct sndcap *snd);
 #endif

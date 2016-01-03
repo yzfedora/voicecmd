@@ -50,6 +50,9 @@ int google_key_init(const char *conf)
 	char *ptr = NULL;
 	size_t len;
 
+	if (!conf)
+		return -1;
+
 	if (!(fp = fopen(conf, "r")))
 		goto out;
 

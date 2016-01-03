@@ -194,31 +194,30 @@ static bool sndcap_is_silent(struct sndcap *snd)
 /*
  * by calling this function to capture the voice from device.
  * - snd         sndcap structure pointer, we created before.
- * - silent_time waiting a number of silent time and go to exit.
- * - timedout    maximum time to capture.
+ * - silent_time waiting a number of silent time and go to exit. (>= 0).
+ *               zero meaning don't use it.
+ * - timedout    maximum time to capture. (must be > 0)
  *
  * Note: silent_time and timedout both are in seconds.
  */
 int sndcap_listen(struct sndcap *snd, uint32_t silent_time, uint32_t timedout)
 {
 	int err;
-	int times = timedout * 1000000 / snd->sc_capinfo_tpp;
-	int remaining_times = 1000000 / snd->sc_capinfo_tpp;
-	int silent_time_cnt = 0;
+	int times, times_per_sec, silent_time_cnt = 0;
+
+	if (!snd || silent_time < 0 || timedout <= 0) {
+		errno = -EINVAL;
+		return -1;
+	}
 
 	snd->sc_buf_len = 0;
 	snd->sc_capinfo_totsamp = 0;
+	times = timedout * 1000000 / snd->sc_capinfo_tpp;
+	times_per_sec  = 1000000 / snd->sc_capinfo_tpp;
+
 	if (sndcap_beep_play(snd) == -1)
 		goto out;
 
-/* #define SNDCAP_SAVE */
-#ifdef SNDCAP_SAVE
-	ssize_t total, offset = 0, nwrt;
-	int fd = open("sound.raw", O_CREAT | O_TRUNC | O_WRONLY, 0640);
-	if (fd == - 1)
-		goto out;
-
-#endif
 try_again:
 	if ((err = snd_pcm_prepare(snd->sc_pcm_cap)) < 0)
 		sndcap_err_goto(snd, err, "snd_pcm_prepapre");
@@ -244,33 +243,23 @@ try_again:
 						snd->sc_capinfo_chn;
 		snd->sc_capinfo_totsamp += err * snd->sc_capinfo_chn;
 
-		
-		if (--remaining_times == 0) {
+	
+		/*
+		 * only when silent_time is greater than 0, following counter
+		 * will be start. if silent_time is zero, meaning don't use
+		 * silent_time.
+		 */	
+		if (silent_time > 0 && --times_per_sec == 0) {
 			if (sndcap_is_silent(snd)) {
 				if (++silent_time_cnt >= silent_time)
 					goto success;	/* silent time exceed */
 			} else
 				silent_time_cnt = 0;
 
-			remaining_times = 1000000 / 
-					snd->sc_capinfo_tpp;
+			times_per_sec = 1000000 / snd->sc_capinfo_tpp;
 		}
 	}
 success:
-#ifdef SNDCAP_SAVE
-	total = snd->sc_buf_len;
-	while (total > 0) {
-		if ((nwrt = write(fd, snd->sc_buf_ptr + offset, total)) > 0) {
-			offset += nwrt;
-			total -= nwrt;
-		}
-	}
-
-	close(fd);
-	printf("write %d bytes to local file 'sound.raw'\n", snd->sc_buf_len);
-	if (nwrt == -1)
-		sndcap_syserr_goto(snd, errno, "write");
-#endif
 	return 0;
 out:
 	return -1;
@@ -287,7 +276,20 @@ void sndcap_delete(struct sndcap *snd)
 		free(snd->sc_err_ptr);
 	if (snd->sc_pcm_cap)
 		snd_pcm_close(snd->sc_pcm_cap);
+
+	if (snd->sc_beep_ptr)
+		free(snd->sc_beep_ptr);
+	if (snd->sc_pcm_beep)
+		snd_pcm_close(snd->sc_pcm_beep);
+
 	free(snd);
+}
+
+char *sndcap_strerror(struct sndcap *snd)
+{
+	if (!snd)
+		return "Invalid argument";
+	return snd->sc_err_ptr;
 }
 
 /* 
@@ -302,6 +304,11 @@ int sndcap_init(struct sndcap *snd)
 	int err;
 	int dir;
 	snd_pcm_hw_params_t *params = NULL;
+
+	if (!snd) {
+		errno = -EINVAL;
+		return -1;
+	}
 
 	if ((err = snd_pcm_open(&snd->sc_pcm_cap,
 				snd->sc_device_name,

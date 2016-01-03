@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "voice_command.h"
 
 /*
@@ -92,6 +93,11 @@ int voice_command_register(char *command, void (*action)(void *arg))
 {
 	struct voice_command *cmd;
 
+	if (!command || !action) {
+		errno = -EINVAL;
+		return -1;
+	}
+
 	if (!(cmd = calloc(1, sizeof(*cmd))))
 		return -1;
 
@@ -124,10 +130,14 @@ int voice_command_register(char *command, void (*action)(void *arg))
  */
 int voice_command_searching(char *string)
 {
-	int idx = voice_command_get_index(string);
-	struct voice_command *last = cr_entry[idx], *next;
+	int idx;
+	struct voice_command *last, *next;
 
-	next = last;
+	if (!string)
+		return -1;
+
+	idx  = voice_command_get_index(string);
+	next = last = cr_entry[idx];
 	while (next) {
 		if (voice_command_is_found(string, next)) {
 			next->vc_action(string);
