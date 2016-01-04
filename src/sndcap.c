@@ -180,13 +180,15 @@ static bool sndcap_is_silent(struct sndcap *snd)
 
 	}
 
-	silent_ratio = (double)(total_sample - normal_sample) / total_sample * 100;
-	printf("silent sample ratio is %.2f%%\n", silent_ratio);
+	silent_ratio = (double)(total_sample - normal_sample) /
+			total_sample * 100;
+	DEBUG("voice data silent ratio is %.2f%%, standard ratio is %d%%",
+				silent_ratio, snd->sc_std_silent_ratio);
 	/*
 	 * Here to adjust the silent ratio. according to you system
 	 * microphone's volume.
 	 */
-	if (silent_ratio > 90)
+	if (silent_ratio > snd->sc_std_silent_ratio)
 		return true;
 	return false;
 }
@@ -197,10 +199,14 @@ static bool sndcap_is_silent(struct sndcap *snd)
  * - silent_time waiting a number of silent time and go to exit. (>= 0).
  *               zero meaning don't use it.
  * - timedout    maximum time to capture. (must be > 0)
+ * - playbeep    if true, play the beep sound. notify user start to talking.
  *
  * Note: silent_time and timedout both are in seconds.
  */
-int sndcap_listen(struct sndcap *snd, uint32_t silent_time, uint32_t timedout)
+int sndcap_listen(struct sndcap *snd,
+		  uint32_t silent_time,
+		  uint32_t timedout,
+		  bool playbeep)
 {
 	int err;
 	int times, times_per_sec, silent_time_cnt = 0;
@@ -215,7 +221,7 @@ int sndcap_listen(struct sndcap *snd, uint32_t silent_time, uint32_t timedout)
 	times = timedout * 1000000 / snd->sc_capinfo_tpp;
 	times_per_sec  = 1000000 / snd->sc_capinfo_tpp;
 
-	if (sndcap_beep_play(snd) == -1)
+	if (playbeep && sndcap_beep_play(snd) == -1)
 		goto out;
 
 try_again:
@@ -422,6 +428,8 @@ struct sndcap *sndcap_new(char *device_name,
 	snd->sc_beepinfo_chn = 2;
 	snd->sc_beepinfo_samprt = 16000;
 	snd->sc_beepinfo_fpp = SI_FRAMES_PER_PERIOD_DEF;
+
+	snd->sc_std_silent_ratio = 90;	/* default standard for silent ratio */
 
 	return snd;
 out:

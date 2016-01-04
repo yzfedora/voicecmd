@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <alsa/asoundlib.h>
 #include "sndinfo.h"
+#include "debug.h"
 
 typedef enum { false, true } bool;
 
@@ -35,6 +36,7 @@ struct sndcap {
 	uint32_t	sc_buf_len;
 	uint32_t	sc_buf_size;
 
+	int		sc_std_silent_ratio;
 
 	struct sndinfo	sc_capinfo;	/* auido info for capture */
 	struct sndinfo	sc_beepinfo;	/* for playback info */
@@ -59,7 +61,10 @@ struct sndcap {
 #define sc_beepinfo_totsamp	sc_beepinfo.si_total_sample
 
 
-int sndcap_listen(struct sndcap *snd, uint32_t silent_time, uint32_t timedout);
+int sndcap_listen(struct sndcap *snd,
+		  uint32_t silent_time,
+		  uint32_t timedout,
+		  bool playbeep);
 void sndcap_delete(struct sndcap *snd);
 int sndcap_init(struct sndcap *snd);
 struct sndcap *sndcap_new(char *device_name,

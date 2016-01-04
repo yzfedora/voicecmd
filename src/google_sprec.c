@@ -207,7 +207,8 @@ static void google_sprec_curl_setopt(struct google_sprec *gs,
 
 	
 	curl_easy_setopt(gs->sr_curl_handle, CURLOPT_POST, 1L);
-	curl_easy_setopt(gs->sr_curl_handle, CURLOPT_POSTFIELDSIZE, gs->sr_snd_len);
+	curl_easy_setopt(gs->sr_curl_handle, CURLOPT_POSTFIELDSIZE,
+			gs->sr_snd_len);
 
 	gs->sr_snd_pos = 0;	/* reset position to 0 */
 	curl_easy_setopt(gs->sr_curl_handle, CURLOPT_READFUNCTION,
@@ -344,7 +345,8 @@ void google_sprec_res_display(struct google_sprec *gs)
 
 	next = gs->sr_res;
 	while (next) {
-		printf("recogniton result from google: %s\n", next->rs_string);
+		printf("\e[32mRecogniton result from google: \e[0m"
+				"\e[1m%s\e[0m\n", next->rs_string);
 		next = next->rs_next;
 	}
 }
