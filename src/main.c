@@ -76,6 +76,71 @@ static void voicecmd_delete(void)
 	DEBUG("ALSA library has been freed.");
 }
 
+static void voicecmd_launch(void)
+{
+
+	/*
+	 * step 1.
+	 *	running in listen model(24 hours), waiting user
+	 * active this program.
+	 */
+	if (sndcap_listen(snd, 1, 3, false) == -1) {
+		fprintf(stderr, "%s", sndcap_strerror(snd));
+		return;
+	}
+
+	if (sphinx_sprec_lookup(ss, snd) == -1)
+		return;
+
+	sphinx_sprec_display(ss);
+	if (!sphinx_sprec_is_prompt(ss, prompt))
+		return;
+
+	/*
+	 * step 2. after the prompt has been detected. now ready to
+	 * listen the real voice command from user.(by play the beep
+	 * to notify the user, program has been ready.)
+	 */
+	sleep(1);	/* sleep 1 second... */
+	if (sndcap_listen(snd, 1, 5, true) == -1) {
+		fprintf(stderr, "%s", sndcap_strerror(snd));
+		return;
+	}
+
+	/* return 0 on success recognition */
+	if (!sphinx_sprec_lookup(ss, snd)) {
+		sphinx_sprec_display(ss);
+		/* 
+		 * try to searching the voice command, return 0 meaning
+		 * voice command has been found. and action has been
+		 * executed. else -1 returned, and print failure message.
+		 */
+		DEBUG("Try using CMU Sphinx to recognition the voice data...");
+		if (!sphinx_sprec_searching(ss))
+			return;
+		DEBUG("CMU Sphinx recognition failure...");
+	}
+
+	/* 
+	 * when the program reach here, meaning the CMU Sphinx recognition was
+	 * failure. then try using Google Speech API.
+	 */
+	DEBUG("Try sending voice data to Google...");
+	if (google_sprec_lookup(gs, snd) == -1) {
+		fprintf(stderr, "%s", google_sprec_strerror(gs));
+		return;
+	}
+	DEBUG("Voice data has been recognized by Google.");
+
+	google_sprec_res_display(gs);
+	
+	DEBUG("Try to searching voice command...");
+	if (google_sprec_searching(gs) == -1) {
+		fprintf(stderr, "\e[31mcommand not found...\e[0m\n");
+		return;
+	}
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -83,61 +148,7 @@ int main(int argc, char *argv[])
 		return -1;
 	
 	while (1) {
-		/*
-		 * step 1.
-		 *	running in listen model(24 hours), waiting user
-		 * active this program.
-		 */
-		if (sndcap_listen(snd, 1, 3, false) == -1) {
-			fprintf(stderr, "%s", sndcap_strerror(snd));
-			continue;
-		}
-
-		/* no any voice was been recognized. */
-		if (sphinx_sprec_lookup(ss, snd) == -1)
-			continue;
-
-		sphinx_sprec_display(ss);
-
-		/* not the prompt */
-		if (!sphinx_sprec_is_prompt(ss, prompt))
-			continue;
-
-		sleep(1);	/* sleep 1 second... */
-		/*
-		 * step 2. after the prompt has been detected. now ready to
-		 * listen the real voice command from user.(by play the beep
-		 * to notify the user, program has been ready.)
-		 */
-		if (sndcap_listen(snd, 1, 5, true) == -1) {
-			fprintf(stderr, "%s", sndcap_strerror(snd));
-			continue;
-		}
-
-		/* 
-		 * try to searching the voice command, return 0 meaning
-		 * voice command has been found. and action has been executed.
-		 */
-		DEBUG("Try using CMU Sphinx to recognition the voice data...");
-		if (!sphinx_sprec_searching(ss))
-			continue;
-		DEBUG("CMU Sphinx recognition failure...");
-		
-	
-		DEBUG("Try sending voice data to Google...");
-		if (google_sprec_lookup(gs, snd) == -1) {
-			fprintf(stderr, "%s", google_sprec_strerror(gs));
-			continue;
-		}
-		DEBUG("Voice data has been recognized by Google.");
-	
-		google_sprec_res_display(gs);
-		
-		/* implemented to call the function voice_command_searching().*/
-		DEBUG("Try to searching voice command...");
-		if (google_sprec_searching(gs) == -1) {
-			fprintf(stderr, "\e[31mcommand not found...\e[0m\n");
-		}
+		voicecmd_launch();
 	}
 
 	voicecmd_delete();

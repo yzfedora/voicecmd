@@ -1,3 +1,6 @@
+/* This is a voice recogniton program written in C language.
+ *		Copyright (C)  2015 Yang Zhang  <yzfedora@gmail.com>
+ */
 #define _GNU_SOURCE
 #include <string.h>
 #include "sphinx_sprec.h"

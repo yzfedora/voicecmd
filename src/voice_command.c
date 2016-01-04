@@ -20,7 +20,7 @@ static int voice_command_get_index(const char *cmd)
 	if (ch >= 'a' && ch <= 'z')
 		return ch - 'a';
 	if (ch >= 'A' && ch <= 'Z')
-		return (ch - 'A' + 26);
+		return (ch - 'A');
 	return CMDREC_TABLE_SZ - 1;
 }
 
@@ -68,13 +68,25 @@ static void voice_command_split(char *string)
 
 static int voice_command_is_found(char *string, struct voice_command *cmd)
 {
-	char *p1 = string, *p2;
 	char *key = cmd->vc_cmdstr;
 
+	/* this compare method will let some command never be executed.
 	while (key < cmd->vc_cmdstr_end) {
 		if (!(p2 = strcasestr(p1, key)))
 			return 0;
 		p1 = p2 + strlen(key) + 1;
+		key += strlen(key) + 1;
+	}*/
+
+	/*
+	 * compare every words in sort of order. ignore the case and other
+	 * words in the end if voice command has found.
+	 */
+	voice_command_split(string);
+	while (key < cmd->vc_cmdstr_end) {
+		if (!strcasestr(string, key))
+			return 0;
+		string += strlen(string) + 1;
 		key += strlen(key) + 1;
 	}
 

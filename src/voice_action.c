@@ -48,14 +48,14 @@ static void action_turn_off_the_light(void *arg)
 	printf("\e[1m\e[4mTurn off the light...\e[0m\n");
 }
 
-static void action_turn_on_all_lights(void *arg)
+static void action_turn_on_all_the_lights(void *arg)
 {
-	printf("\e[1m\e[4mTurn on all lights...\e[0m\n");
+	printf("\e[1m\e[4mTurn on all the lights...\e[0m\n");
 }
 
-static void action_turn_off_all_lights(void *arg)
+static void action_turn_off_all_the_lights(void *arg)
 {
-	printf("\e[1m\e[4mTurn off all lights...\e[0m\n");
+	printf("\e[1m\e[4mTurn off all the lights...\e[0m\n");
 }
 
 #endif
@@ -71,7 +71,9 @@ void voice_action_register_all(void)
 	voice_command_register("close the door", action_close_the_door);
 	voice_command_register("turn on the light", action_turn_on_the_light);
 	voice_command_register("turn off the light", action_turn_off_the_light);
-	voice_command_register("turn on all lights", action_turn_on_all_lights);
-	voice_command_register("turn off all lights", action_turn_off_all_lights);
+	voice_command_register("turn on all the lights",
+				action_turn_on_all_the_lights);
+	voice_command_register("turn off all the lights",
+				action_turn_off_all_the_lights);
 #endif
 }

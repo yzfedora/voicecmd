@@ -182,13 +182,13 @@ static bool sndcap_is_silent(struct sndcap *snd)
 
 	silent_ratio = (double)(total_sample - normal_sample) /
 			total_sample * 100;
-	DEBUG("voice data silent ratio is %.2f%%, standard ratio is %d%%",
-				silent_ratio, snd->sc_std_silent_ratio);
+	DEBUG("Critical ratio is %d%%, current voice silent ratio is %.2f%%",
+				snd->sc_critical_ratio, silent_ratio);
 	/*
 	 * Here to adjust the silent ratio. according to you system
 	 * microphone's volume.
 	 */
-	if (silent_ratio > snd->sc_std_silent_ratio)
+	if (silent_ratio > snd->sc_critical_ratio)
 		return true;
 	return false;
 }
@@ -429,7 +429,7 @@ struct sndcap *sndcap_new(char *device_name,
 	snd->sc_beepinfo_samprt = 16000;
 	snd->sc_beepinfo_fpp = SI_FRAMES_PER_PERIOD_DEF;
 
-	snd->sc_std_silent_ratio = 90;	/* default standard for silent ratio */
+	snd->sc_critical_ratio = 90;	/* default standard for silent ratio */
 
 	return snd;
 out:

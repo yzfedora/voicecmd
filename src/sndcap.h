@@ -36,7 +36,7 @@ struct sndcap {
 	uint32_t	sc_buf_len;
 	uint32_t	sc_buf_size;
 
-	int		sc_std_silent_ratio;
+	int		sc_critical_ratio;
 
 	struct sndinfo	sc_capinfo;	/* auido info for capture */
 	struct sndinfo	sc_beepinfo;	/* for playback info */

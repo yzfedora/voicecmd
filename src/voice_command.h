@@ -1,7 +1,7 @@
 #ifndef _VOICE_COMMAND_H
 #define _VOICE_COMMAND_H
 
-#define CMDREC_TABLE_SZ	53
+#define CMDREC_TABLE_SZ	27
 
 struct voice_command {
 	char	*vc_cmdstr;		/* associated command */
